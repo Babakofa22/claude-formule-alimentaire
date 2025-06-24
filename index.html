@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Global FeedForm Pro</title>
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --accent: #e74c3c;
+            --light: #ecf0f1;
+            --europe: #2980b9;
+            --africa: #27ae60;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: #f8f9fa;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: var(--primary);
+            color: white;
+            padding: 1rem;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+        }
+
+        .form-group {
+            margin: 15px 0;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            margin-top: 5px;
+        }
+
+        button {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .ingredient-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .region-tag {
+            padding: 3px 8px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            color: white;
+        }
+
+        .europe {
+            background: var(--europe);
+        }
+
+        .africa {
+            background: var(--africa);
+        }
+
+        .results {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Global FeedForm Pro</h1>
+            <p>Advanced Feed Formulation for Livestock & Aquaculture</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard">
+            <div class="card">
+                <h2>Comprehensive Ingredient Database</h2>
+                <div style="margin: 15px 0">
+                    <select id="speciesFilter" onchange="filterIngredients()">
+                        <option value="all">All Species</option>
+                        <option value="cattle">Cattle</option>
+                        <option value="goat">Goat</option>
+                        <option value="sheep">Sheep</option>
+                        <option value="poultry">Poultry</option>
+                        <option value="rabbit">Rabbit</option>
+                        <option value="fish">Fish</option>
+                    </select>
+                </div>
+                <input type="text" id="search" placeholder="Search ingredients..." onkeyup="filterIngredients()">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Ingredient</th>
+                            <th>Region</th>
+                            <th>Protein</th>
+                            <th>Fiber</th>
+                            <th>Fat</th>
+                            <th>Cost/kg</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ingredientsList"></tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <h2>Formulation Tool</h2>
+                <div class="form-group">
+                    <h3>Nutritional Targets</h3>
+                    <div class="target-group">
+                        <label>Protein (Min-Max %):</label>
+                        <div class="range-input">
+                            <input type="number" id="targetProteinMin" placeholder="Min" step="0.1">
+                            <input type="number" id="targetProteinMax" placeholder="Max" step="0.1">
+                        </div>
+                    </div>
+                    <!-- Add similar groups for other nutrients -->
+                </div>
+
+                <div class="form-group">
+                    <h3>Ingredient Selection</h3>
+                    <div id="selectedIngredients"></div>
+                    <button onclick="addIngredientRow()">Add Ingredient</button>
+                </div>
+
+                <button onclick="calculateFormulation()" style="width: 100%">Calculate Formulation</button>
+
+                <div class="results" id="formulationResults"></div>
+            </div>
+
+            <div class="card">
+                <h2>Add New Ingredient</h2>
+                <form id="addIngredientForm">
+                    <div class="form-group">
+                        <label>Name:</label>
+                        <input type="text" id="newIngredientName" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Region:</label>
+                        <select id="newIngredientRegion">
+                            <option value="Europe">Europe</option>
+                            <option value="Africa">Africa</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Protein (%):</label>
+                        <input type="number" id="newProtein" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fiber (%):</label>
+                        <input type="number" id="newFiber" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Fat (%):</label>
+                        <input type="number" id="newFat" step="0.1" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost/kg:</label>
+                        <input type="number" id="newCost" step="0.01" required>
+                    </div>
+                    <button type="submit">Add Ingredient</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initial database with regional references
+        let ingredients = [
+            { name: "Corn", region: "Europe", protein: 9.4, fiber: 2.7, fat: 3.4, cost: 0.15, species: ["cattle", "poultry"] },
+            { name: "Soybean Meal", region: "Europe", protein: 45.0, fiber: 3.9, fat: 1.9, cost: 0.32, species: ["cattle", "poultry"] },
+            { name: "Cassava", region: "Africa", protein: 2.5, fiber: 2.0, fat: 0.5, cost: 0.12, species: ["goat", "sheep"] },
+            { name: "Fish Meal", region: "Europe", protein: 62.0, fiber: 1.0, fat: 8.0, cost: 0.85, species: ["fish"] },
+            { name: "Alfalfa Meal", region: "Europe", protein: 17.0, fiber: 25.0, fat: 3.0, cost: 0.22, species: ["rabbit"] },
+            { name: "Millet", region: "Africa", protein: 11.0, fiber: 8.0, fat: 4.0, cost: 0.18, species: ["goat", "sheep"] },
+            { name: "Sunflower Cake", region: "Africa", protein: 28.0, fiber: 20.0, fat: 10.0, cost: 0.25, species: ["cattle"] }
+        ];
+
+        let selectedIngredients = [];
+
+        // Filter ingredients by species and search
+        function filterIngredients() {
+            const searchTerm = document.getElementById('search').value.toLowerCase();
+            const speciesFilter = document.getElementById('speciesFilter').value;
+            
+            const filtered = ingredients.filter(ing => {
+                const matchesSearch = ing.name.toLowerCase().includes(searchTerm);
+                const matchesSpecies = speciesFilter === 'all' || ing.species.includes(speciesFilter);
+                return matchesSearch && matchesSpecies;
+            });
+            
+            renderIngredients(filtered);
+        }
+
+        function renderIngredients(filteredList = ingredients) {
+            const tbody = document.getElementById('ingredientsList');
+            tbody.innerHTML = filteredList.map(ing => `
+                <tr>
+                    <td>${ing.name} <span class="region-tag ${ing.region.toLowerCase()}">${ing.region}</span></td>
+                    <td>${ing.protein}%</td>
+                    <td>${ing.fiber}%</td>
+                    <td>${ing.fat}%</td>
+                    <td>$${ing.cost}</td>
+                    <td><button onclick="addToFormulation('${ing.name}')">Add</button></td>
+                </tr>
+            `).join('');
+        }
+
+        function addToFormulation(ingredientName) {
+            const ingredient = ingredients.find(ing => ing.name === ingredientName);
+            if(ingredient) {
+                const container = document.getElementById('selectedIngredients');
+                const select = document.createElement('select');
+                select.innerHTML = ingredients.map(ing => 
+                    `<option value="${ing.name}">${ing.name}</option>`
+                ).join('');
+                select.value = ingredientName;
+                
+                const input = document.createElement('input');
+                input.type = 'number';
+                input.placeholder = 'Percentage';
+                input.step = '0.1';
+                
+                const div = document.createElement('div');
+                div.className = 'ingredient-selector';
+                div.appendChild(select);
+                div.appendChild(input);
+                container.appendChild(div);
+            }
+        }
+
+        // Add new ingredient functionality
+        document.getElementById('addIngredientForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const newIng = {
+                name: document.getElementById('newIngredientName').value,
+                region: document.getElementById('newIngredientRegion').value,
+                protein: parseFloat(document.getElementById('newProtein').value),
+                fiber: parseFloat(document.getElementById('newFiber').value),
+                fat: parseFloat(document.getElementById('newFat').value),
+                cost: parseFloat(document.getElementById('newCost').value),
+                species: ["cattle", "goat", "sheep", "poultry", "rabbit", "fish"] // Default all species
+            };
+            
+            ingredients.push(newIng);
+            filterIngredients();
+            this.reset();
+        });
+
+        // Formulation calculation with regional compliance checks
+        function calculateFormulation() {
+            const rows = document.querySelectorAll('#selectedIngredients .ingredient-selector');
+            let totals = { protein: 0, fiber: 0, fat: 0, cost: 0 };
+            let totalPercent = 0;
+            let regionCounts = { Europe: 0, Africa: 0 };
+
+            rows.forEach(row => {
+                const ingredient = ingredients.find(ing => ing.name === row.querySelector('select').value);
+                const percent = parseFloat(row.querySelector('input').value) || 0;
+                
+                if (ingredient && percent > 0) {
+                    totals.protein += (ingredient.protein * percent) / 100;
+                    totals.fiber += (ingredient.fiber * percent) / 100;
+                    totals.fat += (ingredient.fat * percent) / 100;
+                    totals.cost += ingredient.cost * percent;
+                    totalPercent += percent;
+                    regionCounts[ingredient.region]++;
+                }
+            });
+
+            const results = document.getElementById('formulationResults');
+            let compliance = '';
+            
+            // Check regional compliance
+            if(regionCounts.Europe > 0 && regionCounts.Africa > 0) {
+                compliance = '<div style="color: #e74c3c">⚠️ Mixed regional ingredients detected</div>';
+            } else if(regionCounts.Europe > 0) {
+                compliance = '<div style="color: #2980b9">✅ Europe-compliant formulation</div>';
+            } else if(regionCounts.Africa > 0) {
+                compliance = '<div style="color: #27ae60">✅ Africa-compliant formulation</div>';
+            }
+
+            results.innerHTML = `
+                <h3>Formulation Results ${compliance}</h3>
+                <p>Total Percentage: ${totalPercent.toFixed(1)}%</p>
+                <table>
+                    <tr><td>Protein:</td><td>${totals.protein.toFixed(2)}%</td></tr>
+                    <tr><td>Fiber:</td><td>${totals.fiber.toFixed(2)}%</td></tr>
+                    <tr><td>Fat:</td><td>${totals.fat.toFixed(2)}%</td></tr>
+                    <tr><td>Cost/kg:</td><td>$${totals.cost.toFixed(2)}</td></tr>
+                </table>
+            `;
+        }
+
+        // Initial render
+        renderIngredients();
+    </script>
+</body>
+</html>
